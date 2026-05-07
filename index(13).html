@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>끝말잇기 게임</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Pretendard", "Noto Sans KR", Arial, sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(122,44,255,.45), transparent 34%),
+    radial-gradient(circle at 85% 90%, rgba(0,180,216,.35), transparent 36%),
+    linear-gradient(135deg, #070711, #111225);
+  color: #fff;
+  padding: 18px;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.25fr .75fr;
+  gap: 18px;
+}
+
+.panel {
+  background: rgba(255,255,255,.075);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+  backdrop-filter: blur(14px);
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -1px;
+}
+
+.sub {
+  color: #c8c9e8;
+  margin-top: 8px;
+  line-height: 1.55;
+}
+
+.badge {
+  background: rgba(255,216,77,.16);
+  border: 1px solid rgba(255,216,77,.38);
+  color: #ffd84d;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.stat {
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.stat small {
+  display: block;
+  color: #aeb0d8;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.stat strong {
+  font-size: 22px;
+}
+
+.current-box {
+  background:
+    linear-gradient(135deg, rgba(255,216,77,.22), rgba(122,44,255,.18)),
+    rgba(0,0,0,.18);
+  border: 1px solid rgba(255,216,77,.42);
+  border-radius: 22px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.current-label {
+  color: #f5edc7;
+  font-weight: 800;
+  margin-bottom: 7px;
+}
+
+.need-char {
+  font-size: 56px;
+  font-weight: 1000;
+  color: #ffd84d;
+  text-shadow: 0 0 28px rgba(255,216,77,.45);
+  line-height: 1;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  color: #fff;
+  border-radius: 15px;
+  padding: 14px 15px;
+  font-size: 17px;
+  outline: none;
+  min-width: 0;
+}
+
+input[type="text"]:focus {
+  border-color: #ffd84d;
+  box-shadow: 0 0 0 4px rgba(255,216,77,.12);
+}
+
+button {
+  border: 0;
+  border-radius: 15px;
+  padding: 13px 16px;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7a2cff, #00b4d8);
+  box-shadow: 0 12px 25px rgba(0,0,0,.24);
+  transition: .12s;
+  white-space: nowrap;
+}
+
+button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.gold {
+  background: linear-gradient(135deg, #ffb703, #fb8500);
+}
+
+button.red {
+  background: linear-gradient(135deg, #ff3b5f, #b5179e);
+}
+
+button.gray {
+  background: rgba(255,255,255,.13);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+button.green {
+  background: linear-gradient(135deg, #00c853, #00a884);
+}
+
+.message {
+  min-height: 30px;
+  margin-top: 13px;
+  font-weight: 900;
+  line-height: 1.5;
+  color: #d8f3ff;
+}
+
+.message.good {
+  color: #90f1c4;
+}
+
+.message.bad {
+  color: #ff8fa3;
+}
+
+.history {
+  height: 330px;
+  overflow-y: auto;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 19px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.turn {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 11px 13px;
+  margin-bottom: 8px;
+}
+
+.turn.player {
+  border-left: 4px solid #ffd84d;
+}
+
+.turn.ai {
+  border-left: 4px solid #00b4d8;
+}
+
+.turn.system {
+  border-left: 4px solid #9dff6b;
+}
+
+.turn span {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.bottom-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.side h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 13px;
+  margin-bottom: 10px;
+}
+
+.option b {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.option small {
+  color: #b9bade;
+  line-height: 1.45;
+}
+
+input[type="checkbox"] {
+  transform: scale(1.25);
+}
+
+.search-box {
+  margin-top: 12px;
+}
+
+.search-results {
+  margin-top: 10px;
+  height: 245px;
+  overflow-y: auto;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.word-chip {
+  display: inline-block;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.105);
+  border: 1px solid rgba(255,255,255,.08);
+  margin: 4px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.word-chip:hover {
+  background: rgba(255,216,77,.18);
+  border-color: rgba(255,216,77,.3);
+}
+
+.guide {
+  color: #c7c8e8;
+  font-size: 14px;
+  line-height: 1.65;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 13px;
+  margin-top: 13px;
+}
+
+.file-box {
+  margin-top: 13px;
+  background: rgba(0,0,0,.18);
+  border: 1px dashed rgba(255,255,255,.25);
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.file-box input {
+  width: 100%;
+  margin-top: 9px;
+  color: #ddd;
+}
+
+.rank-box {
+  margin-top: 13px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.rank-title {
+  font-weight: 1000;
+  color: #ffd84d;
+  margin-bottom: 8px;
+}
+
+.progress {
+  height: 14px;
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ffd84d, #00e5ff);
+  border-radius: 999px;
+  transition: .2s;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: 10px;
+  }
+
+  .panel {
+    padding: 15px;
+    border-radius: 20px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .need-char {
+    font-size: 44px;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="panel">
+    <div class="title-row">
+      <div>
+        <h1>끝말잇기</h1>
+        <div class="sub">내장 단어장 기반으로 컴퓨터와 끝말잇기를 합니다. GitHub Pages에서 바로 실행됩니다.</div>
+      </div>
+      <div class="badge" id="wordBadge">단어장 로딩 중</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <small>현재 차례</small>
+        <strong id="turnText">내 차례</strong>
+      </div>
+      <div class="stat">
+        <small>필요 글자</small>
+        <strong id="needSmall">자유</strong>
+      </div>
+      <div class="stat">
+        <small>사용 단어</small>
+        <strong id="usedCount">0개</strong>
+      </div>
+      <div class="stat">
+        <small>점수</small>
+        <strong id="scoreText">0</strong>
+      </div>
+    </div>
+
+    <div class="current-box">
+      <div class="current-label">이번에 시작해야 할 글자</div>
+      <div class="need-char" id="needChar">아무거나</div>
+    </div>
+
+    <div class="input-row">
+      <input id="wordInput" type="text" placeholder="단어 입력" autocomplete="off" />
+      <button onclick="submitPlayerWord()">입력</button>
+      <button class="gold" onclick="showHint()">힌트</button>
+    </div>
+
+    <div class="message" id="message">첫 단어를 입력하세요.</div>
+
+    <div class="history" id="history"></div>
+
+    <div class="bottom-buttons">
+      <button class="green" onclick="startRandomWord()">랜덤 시작</button>
+      <button class="gray" onclick="passTurn()">포기 / 컴퓨터에게 넘기기</button>
+      <button class="red" onclick="resetGame()">처음부터</button>
+    </div>
+  </main>
+
+  <aside class="panel side">
+    <h2>설정</h2>
+
+    <div class="option">
+      <div>
+        <b>사전 검사</b>
+        <small>켜면 단어장에 있는 단어만 인정합니다.</small>
+      </div>
+      <input id="strictMode" type="checkbox" checked />
+    </div>
+
+    <div class="option">
+      <div>
+        <b>두음법칙 허용</b>
+        <small>력→역, 녀→여 같은 일부 변환을 허용합니다.</small>
+      </div>
+      <input id="soundRule" type="checkbox" checked />
+    </div>
+
+    <div class="option">
+      <div>
+        <b>컴퓨터 어려움</b>
+        <small>컴퓨터가 다음 후보가 많은 단어를 더 자주 고릅니다.</small>
+      </div>
+      <input id="hardMode" type="checkbox" checked />
+    </div>
+
+    <div class="rank-box">
+      <div class="rank-title" id="rankTitle">랭크: 새싹</div>
+      <div class="progress"><div class="progress-fill" id="rankFill"></div></div>
+      <div class="guide" id="rankGuide">점수를 올리면 랭크가 올라갑니다.</div>
+    </div>
+
+    <h2 style="margin-top:18px;">단어 검색</h2>
+    <div class="input-row search-box">
+      <input id="searchInput" type="text" placeholder="단어 검색 또는 시작 글자" oninput="searchWords()" />
+      <button class="gray" onclick="searchWords()">검색</button>
+    </div>
+    <div class="search-results" id="searchResults">검색어를 입력하세요.</div>
+
+    <div class="file-box">
+      <b>추가 단어장 불러오기</b>
+      <div class="guide">
+        txt 파일을 불러오면 단어가 추가됩니다. 한 줄에 하나씩 쓰면 됩니다.
+      </div>
+      <input type="file" accept=".txt,.csv" onchange="loadExtraWords(event)" />
+    </div>
+
+    <div class="guide">
+      <b>GitHub 업로드 방법</b><br>
+      같은 폴더에 <b>index.html</b>과 <b>words.js</b>를 넣으세요.
+      파일 이름이 다르면 단어장을 못 불러옵니다.
+    </div>
+  </aside>
+</div>
+
+<script src="words.js"></script>
+<script>
+const dictionary = new Set();
+const usedWords = new Set();
+const history = [];
+
+let needChar = "";
+let gameOver = false;
+let score = 0;
+
+const wordInput = document.getElementById("wordInput");
+const message = document.getElementById("message");
+const historyEl = document.getElementById("history");
+const needCharEl = document.getElementById("needChar");
+const needSmall = document.getElementById("needSmall");
+const usedCount = document.getElementById("usedCount");
+const turnText = document.getElementById("turnText");
+const scoreText = document.getElementById("scoreText");
+const wordBadge = document.getElementById("wordBadge");
+const searchInput = document.getElementById("searchInput");
+const searchResults = document.getElementById("searchResults");
+const rankTitle = document.getElementById("rankTitle");
+const rankFill = document.getElementById("rankFill");
+const rankGuide = document.getElementById("rankGuide");
+
+const RANKS = [
+  { name: "새싹", min: 0 },
+  { name: "초보", min: 30 },
+  { name: "단어 수집가", min: 80 },
+  { name: "끝말잇기 고수", min: 160 },
+  { name: "국어왕", min: 300 },
+  { name: "사전 지배자", min: 500 },
+  { name: "끝말잇기 전설", min: 800 }
+];
+
+init();
+
+function init() {
+  if (!Array.isArray(window.WORDS)) {
+    setMessage("words.js를 찾지 못했습니다. index.html과 words.js가 같은 폴더에 있는지 확인하세요.", false);
+    wordBadge.textContent = "단어장 오류";
+    return;
+  }
+
+  window.WORDS.forEach(word => {
+    const clean = cleanWord(word);
+    if (clean.length >= 2) dictionary.add(clean);
+  });
+
+  wordBadge.textContent = `단어장 ${dictionary.size.toLocaleString()}개`;
+  updateUI();
+
+  wordInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") submitPlayerWord();
+  });
+}
+
+function cleanWord(word) {
+  return String(word || "")
+    .trim()
+    .replace(/[^가-힣]/g, "");
+}
+
+function firstChar(word) {
+  return word[0] || "";
+}
+
+function lastChar(word) {
+  return word[word.length - 1] || "";
+}
+
+function isHangulSyllable(ch) {
+  if (!ch) return false;
+  const code = ch.charCodeAt(0);
+  return code >= 0xAC00 && code <= 0xD7A3;
+}
+
+const CHO = [
+  "ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ",
+  "ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"
+];
+
+const JUNG = [
+  "ㅏ","ㅐ","ㅑ","ㅒ","ㅓ","ㅔ","ㅕ","ㅖ","ㅗ","ㅘ",
+  "ㅙ","ㅚ","ㅛ","ㅜ","ㅝ","ㅞ","ㅟ","ㅠ","ㅡ","ㅢ","ㅣ"
+];
+
+function decompose(ch) {
+  if (!isHangulSyllable(ch)) return null;
+  const code = ch.charCodeAt(0) - 0xAC00;
+  return {
+    cho: Math.floor(code / 588),
+    jung: Math.floor((code % 588) / 28),
+    jong: code % 28
+  };
+}
+
+function compose(cho, jung, jong) {
+  return String.fromCharCode(0xAC00 + cho * 588 + jung * 28 + jong);
+}
+
+function possibleStartChars(ch) {
+  const result = new Set([ch]);
+
+  if (!document.getElementById("soundRule").checked) return result;
+
+  const d = decompose(ch);
+  if (!d) return result;
+
+  const initial = CHO[d.cho];
+  const vowel = JUNG[d.jung];
+  const yOrI = ["ㅑ","ㅒ","ㅕ","ㅖ","ㅛ","ㅠ","ㅣ"].includes(vowel);
+
+  if (initial === "ㄹ") {
+    result.add(compose(11, d.jung, d.jong));
+    if (yOrI) result.add(compose(2, d.jung, d.jong));
+  }
+
+  if (initial === "ㄴ" && yOrI) {
+    result.add(compose(11, d.jung, d.jong));
+  }
+
+  return result;
+}
+
+function startsCorrectly(word) {
+  if (!needChar) return true;
+  return possibleStartChars(needChar).has(firstChar(word));
+}
+
+function submitPlayerWord() {
+  if (gameOver) {
+    setMessage("게임이 끝났습니다. 처음부터를 눌러 다시 시작하세요.", false);
+    return;
+  }
+
+  const word = cleanWord(wordInput.value);
+  wordInput.value = "";
+
+  const check = validateWord(word);
+  if (!check.ok) {
+    setMessage(check.reason, false);
+    return;
+  }
+
+  addWord("나", word, "player");
+  score += Math.max(5, word.length * 2);
+  setMessage(`좋아요! '${word}' 인정.`, true);
+  updateUI();
+
+  setTimeout(computerTurn, 400);
+}
+
+function validateWord(word) {
+  if (!word) return { ok: false, reason: "단어를 입력하세요." };
+  if (word.length < 2) return { ok: false, reason: "두 글자 이상 단어만 가능합니다." };
+  if (usedWords.has(word)) return { ok: false, reason: "이미 사용한 단어입니다." };
+
+  if (!startsCorrectly(word)) {
+    const chars = [...possibleStartChars(needChar)].join(", ");
+    return { ok: false, reason: `'${chars}' 중 하나로 시작해야 합니다.` };
+  }
+
+  if (document.getElementById("strictMode").checked && !dictionary.has(word)) {
+    return { ok: false, reason: "단어장에 없는 단어입니다. 사전 검사를 끄거나 단어장을 추가하세요." };
+  }
+
+  return { ok: true };
+}
+
+function computerTurn() {
+  if (gameOver) return;
+
+  turnText.textContent = "컴퓨터 차례";
+
+  const candidates = getCandidatesForCurrentChar();
+
+  if (candidates.length === 0) {
+    gameOver = true;
+    score += 30;
+    setMessage("컴퓨터가 이어갈 단어를 찾지 못했습니다. 승리!", true);
+    addHistoryOnly("시스템", "승리!", "system");
+    updateUI();
+    return;
+  }
+
+  const aiWord = chooseComputerWord(candidates);
+  addWord("컴퓨터", aiWord, "ai");
+
+  setMessage(`컴퓨터: '${aiWord}' → 이제 '${needChar}'로 시작하세요.`, true);
+  turnText.textContent = "내 차례";
+  updateUI();
+  wordInput.focus();
+}
+
+function getCandidatesForCurrentChar() {
+  const result = [];
+  for (const word of dictionary) {
+    if (!usedWords.has(word) && startsCorrectly(word)) {
+      result.push(word);
+    }
+  }
+  return result;
+}
+
+function chooseComputerWord(candidates) {
+  if (!document.getElementById("hardMode").checked) {
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  const scored = candidates.map(word => ({
+    word,
+    score: countNextCandidates(lastChar(word))
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const topSize = Math.max(1, Math.min(12, Math.ceil(scored.length * 0.15)));
+  const top = scored.slice(0, topSize);
+
+  return top[Math.floor(Math.random() * top.length)].word;
+}
+
+function countNextCandidates(ch) {
+  let count = 0;
+  const starts = possibleStartChars(ch);
+
+  for (const word of dictionary) {
+    if (!usedWords.has(word) && starts.has(firstChar(word))) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+function addWord(who, word, type) {
+  usedWords.add(word);
+  history.push({ who, word, type });
+  needChar = lastChar(word);
+  renderHistory();
+}
+
+function addHistoryOnly(who, word, type) {
+  history.push({ who, word, type });
+  renderHistory();
+}
+
+function renderHistory() {
+  historyEl.innerHTML = "";
+
+  [...history].reverse().forEach(item => {
+    const div = document.createElement("div");
+    div.className = `turn ${item.type}`;
+    div.innerHTML = `<b>${item.who}</b><span>${item.word}</span>`;
+    historyEl.appendChild(div);
+  });
+}
+
+function updateUI() {
+  needCharEl.textContent = needChar || "아무거나";
+  needSmall.textContent = needChar || "자유";
+  usedCount.textContent = `${usedWords.size}개`;
+  scoreText.textContent = score.toLocaleString();
+  wordBadge.textContent = `단어장 ${dictionary.size.toLocaleString()}개`;
+  updateRank();
+}
+
+function updateRank() {
+  let current = RANKS[0];
+  let next = RANKS[RANKS.length - 1];
+
+  for (let i = 0; i < RANKS.length; i++) {
+    if (score >= RANKS[i].min) {
+      current = RANKS[i];
+      next = RANKS[Math.min(i + 1, RANKS.length - 1)];
+    }
+  }
+
+  rankTitle.textContent = `랭크: ${current.name}`;
+
+  if (current === next) {
+    rankFill.style.width = "100%";
+    rankGuide.textContent = "최고 랭크입니다.";
+    return;
+  }
+
+  const prevScore = current.min;
+  const nextScore = next.min;
+  const percent = Math.max(0, Math.min(100, ((score - prevScore) / (nextScore - prevScore)) * 100));
+
+  rankFill.style.width = `${percent}%`;
+  rankGuide.textContent = `다음 랭크 '${next.name}'까지 ${Math.max(0, nextScore - score)}점 남음`;
+}
+
+function setMessage(text, good) {
+  message.textContent = text;
+  message.className = `message ${good ? "good" : "bad"}`;
+}
+
+function resetGame() {
+  usedWords.clear();
+  history.length = 0;
+  needChar = "";
+  gameOver = false;
+  score = 0;
+  turnText.textContent = "내 차례";
+  historyEl.innerHTML = "";
+  setMessage("처음부터 다시 시작합니다. 첫 단어를 입력하세요.", true);
+  updateUI();
+  wordInput.focus();
+}
+
+function startRandomWord() {
+  if (dictionary.size === 0) {
+    setMessage("단어장이 비어 있습니다.", false);
+    return;
+  }
+
+  resetGame();
+
+  const arr = [...dictionary];
+  const word = arr[Math.floor(Math.random() * arr.length)];
+
+  addWord("시작 단어", word, "system");
+  setMessage(`시작 단어는 '${word}'입니다. 이제 '${needChar}'로 시작하세요.`, true);
+  updateUI();
+}
+
+function passTurn() {
+  if (gameOver) return;
+  if (!needChar) {
+    setMessage("아직 시작 단어가 없습니다. 단어를 입력하거나 랜덤 시작을 누르세요.", false);
+    return;
+  }
+  computerTurn();
+}
+
+function showHint() {
+  if (gameOver) {
+    setMessage("게임이 끝났습니다.", false);
+    return;
+  }
+
+  const candidates = getCandidatesForCurrentChar();
+
+  if (candidates.length === 0) {
+    setMessage("힌트로 줄 수 있는 단어가 없습니다.", false);
+    return;
+  }
+
+  const sample = candidates.slice(0, 12);
+  setMessage(`힌트: ${sample.join(", ")}`, true);
+}
+
+function searchWords() {
+  const q = cleanWord(searchInput.value);
+
+  if (!q) {
+    searchResults.textContent = "검색어를 입력하세요.";
+    return;
+  }
+
+  const results = [...dictionary]
+    .filter(word => word.includes(q) || word.startsWith(q))
+    .slice(0, 300);
+
+  if (results.length === 0) {
+    searchResults.textContent = "검색 결과가 없습니다.";
+    return;
+  }
+
+  searchResults.innerHTML = results
+    .map(word => `<span class="word-chip" onclick="fillWord('${word}')">${word}</span>`)
+    .join("");
+}
+
+function fillWord(word) {
+  wordInput.value = word;
+  wordInput.focus();
+}
+
+function loadExtraWords(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const text = String(reader.result || "");
+    const words = text
+      .split(/[\n\r, ]+/)
+      .map(cleanWord)
+      .filter(word => word.length >= 2);
+
+    let added = 0;
+
+    words.forEach(word => {
+      if (!dictionary.has(word)) {
+        dictionary.add(word);
+        added++;
+      }
+    });
+
+    setMessage(`추가 단어장 로딩 완료: ${added.toLocaleString()}개 추가`, true);
+    updateUI();
+    searchWords();
+  };
+
+  reader.readAsText(file, "UTF-8");
+}
+</script>
+</body>
+</html>
